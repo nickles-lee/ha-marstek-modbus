@@ -2,9 +2,9 @@
 
 Local Modbus TCP integration for Marstek Venus A, Venus D, Venus E 2.0 and Venus E v3 batteries, with direct Home Battery Control entity compatibility.
 
-**Minimum Home Assistant version: 2026.9.0.** The integration uses Home Assistant’s Modbus transport. The author reports about a week of real-world use with Venus A, E 2.0, and E v3. Venus D has not been hardware-tested because the author does not own one.
+**Minimum Home Assistant version: 2026.9.0.** The integration uses Home Assistant’s Modbus transport. The author has around three weeks of real-world usage with Venus A, E 2.0, and E v3 batteries. Venus D has not been hardware-tested because the author does not own one.
 
-**Safety and no warranty:** This software is provided “as is,” without warranty to the extent permitted by law. These batteries may store 5 kWh or more and deliver up to 2.5 kW. Incorrect readings or commands can cause equipment damage, fire, or injury. Follow manufacturer limits, keep hardware protections in place, and supervise initial operation. This integration is not a safety system. Read [Safety](SAFETY.md) before enabling controls.
+**Safety and no warranty:** This software is provided “as is,” without warranty to the extent permitted by law. These batteries may store 5 kWh or more and deliver up to 2.5 kW of power at once. Incorrect readings or commands can cause equipment damage, fire, or injury. Follow manufacturer limits, keep hardware protections in place, and supervise initial operation. This integration is not a safety system. Read [Safety](SAFETY.md) before enabling controls. Remember that two batteries on a single phase can blow a 25A main fuse and require a €100 electrician visit!
 
 ## Installation
 
@@ -83,8 +83,8 @@ See [hardware validation](docs/hardware-validation.md) and [validation results](
 ## Control register management
 
 The selector beside the battery model offers **HA Managed Control Registers**
-(default, including upgraded entries) and **Battery Managed Control Registers**
-(the previous readback-based behavior). It can be changed through Reconfigure.
+(default, will overwrite battery registers) and **Battery Managed Control Registers**
+(a readback-based behavior). It can be changed through Reconfigure.
 
 HA Managed owns eight primary controls: RS485 mode, work mode, backup function,
 forced direction, forced charge/discharge powers and maximum charge/discharge

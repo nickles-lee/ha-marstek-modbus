@@ -11,7 +11,7 @@ Use Python 3.14.2–3.14.x. From a fresh checkout, run:
 
 `setup` creates ignored `.venv/<baseline>/` environments, fetches full upstream Home Assistant Core at the commits in `core-baselines.json` into ignored `.test-core/<baseline>/`, installs matching dependencies, and generates translations. It refuses an existing Core checkout at a different commit. `check` runs the same gates as CI. Network access is needed for the initial setup; no sibling source checkout is needed.
 
-Edit the canonical library in `dev/marstek-modbus`, Core overlay in `dev/home-assistant-core`, and icon in `assets/icon.png`. Run `./.venv/stable/bin/python scripts/sync.py` to regenerate the vendored library, converted tests, brand icon, and package hashes. Do not edit `custom_components/marstek/_vendor` by hand. The installable package is self-contained: HACS users do not install the library separately.
+Edit the canonical library in `dev/marstek-modbus`, Core overlay in `dev/home-assistant-core`, and brand images in `assets/`. Run `./.venv/stable/bin/python scripts/sync.py` to regenerate the vendored library, converted tests, brand images, and package hashes. See [brand asset provenance](assets/README.md) when updating the images. Do not edit `custom_components/marstek/_vendor` by hand. The installable package is self-contained: HACS users do not install the library separately.
 
 Include model, firmware, pack count, reproduction steps, and redacted diagnostics with bug reports. Do not commit MAC addresses, local endpoints, passwords, keys, or raw hardware captures. Read [Safety](SAFETY.md) before testing any writes.
 

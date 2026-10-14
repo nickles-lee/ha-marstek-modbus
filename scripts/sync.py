@@ -44,8 +44,9 @@ def expected(lib: Path, core: Path) -> dict[str, bytes]:
             content = json.dumps(manifest, indent=2) + "\n"
         result[source.name] = content.encode()
     result["translations/en.json"] = result["strings.json"]
-    brand = Path(__file__).resolve().parents[1] / "assets/icon.png"
-    result["brand/icon.png"] = brand.read_bytes()
+    assets = Path(__file__).resolve().parents[1] / "assets"
+    for name in ("icon.png", "icon@2x.png"):
+        result[f"brand/{name}"] = (assets / name).read_bytes()
     result["_vendor/__init__.py"] = (
         b'"""Vendored device library; synchronize with scripts/sync.py."""\n'
     )

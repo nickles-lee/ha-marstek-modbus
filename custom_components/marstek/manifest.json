@@ -1,0 +1,17 @@
+{
+  "domain": "marstek",
+  "name": "Marstek",
+  "codeowners": [
+    "@nickles-lee"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "modbus"
+  ],
+  "documentation": "https://github.com/nickles-lee/ha-marstek-modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/nickles-lee/ha-marstek-modbus/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

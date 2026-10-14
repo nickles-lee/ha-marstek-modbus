@@ -1,0 +1,12 @@
+{
+  "stable": {
+    "homeassistant": "2026.9.0",
+    "commit": "dfb5a9e690daaf204b542896e4b595e61a11a401",
+    "modbus_connection": "4.10.0"
+  },
+  "development": {
+    "homeassistant": "2026.10.0.dev0",
+    "commit": "c507e71d0d647518c6b7159a62cca4a046110187",
+    "modbus_connection": "4.12.1"
+  }
+}

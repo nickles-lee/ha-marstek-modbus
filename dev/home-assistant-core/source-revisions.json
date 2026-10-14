@@ -1,0 +1,10 @@
+{
+  "darkrain-nl/sofar-modbus": "8ba88c64fd53fb2474b6ac63f1537732951f1a3e",
+  "home-assistant-libs/modbus-connection": "d2f683745f942908056debfb46fa2b04a620eb5e",
+  "fonske/MarstekVenusV3-modbus-TCP-IP": "2626b7ff4c05a22572f029c58404fc653e73e691",
+  "ludeeus/integration_blueprint": "cd399dac2a7e88d899dd62b3f5d8bbf91f1adadd",
+  "gitcodebob/marstek-venus-rs485-node-red": "1fa3b65c59a87a55d5e29c78b46d4a71d5b99eb4",
+  "sphings79/Marstek-Venus-D-Firmware-Reverse-Engineering": "3a2d55e62763eff0eba8fad34e0b967b00b2c435",
+  "home-assistant/core": "c507e71d0d647518c6b7159a62cca4a046110187",
+  "home-assistant/core-compatibility-baseline": "dfb5a9e690daaf204b542896e4b595e61a11a401"
+}

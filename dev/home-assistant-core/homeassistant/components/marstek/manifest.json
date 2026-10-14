@@ -1,0 +1,18 @@
+{
+  "domain": "marstek",
+  "name": "Marstek",
+  "codeowners": [
+    "@nickles-lee"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "modbus"
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/marstek",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": [
+    "marstek-modbus==0.1.0"
+  ]
+}

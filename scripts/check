@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Run the full local validation suite for a pinned Core baseline."""
+
+import argparse
+import json
+import os
+import subprocess
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+BASELINES = json.loads((ROOT / "core-baselines.json").read_text())
+
+
+def main() -> None:
+    """Check canonical sources, the integration, and the release archive."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("baseline", nargs="?", choices=BASELINES, default="stable")
+    args = parser.parse_args()
+    python = str(ROOT / ".venv" / args.baseline / "bin/python")
+    env = os.environ.copy()
+    env["PATH"] = str(Path(python).parent) + os.pathsep + env.get("PATH", "")
+    env["PYTHONPATH"] = (
+        str(ROOT / "dev/marstek-modbus/src") + os.pathsep + env.get("PYTHONPATH", "")
+    )
+    core = ROOT / ".test-core" / args.baseline
+    if not Path(python).exists() or not core.exists():
+        raise SystemExit(f"Run ./scripts/setup {args.baseline} first")
+    commands = [
+        ([python, str(ROOT / "scripts/fetch_core.py"), args.baseline], ROOT),
+        ([python, str(ROOT / "scripts/sync.py"), "--check"], ROOT),
+        ([python, str(ROOT / "scripts/check_package.py")], ROOT),
+        ([python, str(ROOT / "scripts/check_publishable.py")], ROOT),
+        ([python, str(ROOT / "scripts/check_esphome.py")], ROOT),
+        ([python, "-m", "ruff", "check", "."], ROOT),
+        ([python, "-m", "ruff", "format", "--check", "."], ROOT),
+        ([python, "-m", "mypy"], ROOT / "dev/marstek-modbus"),
+        ([python, "-m", "pytest", "-q"], ROOT / "dev/marstek-modbus"),
+        ([python, str(ROOT / "scripts/test.py"), "--core-checkout", str(core)], ROOT),
+        ([python, str(ROOT / "scripts/package.py")], ROOT),
+        ([python, str(ROOT / "scripts/smoke.py"), "--core-checkout", str(core)], ROOT),
+        (
+            [
+                python,
+                "-m",
+                "script.hassfest",
+                "--integration-path",
+                str(ROOT / "custom_components/marstek"),
+            ],
+            core,
+        ),
+    ]
+    for command, cwd in commands:
+        print("+", " ".join(command), flush=True)
+        subprocess.run(command, cwd=cwd, env=env, check=True)
+
+
+if __name__ == "__main__":
+    main()

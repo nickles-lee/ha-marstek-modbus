@@ -1,0 +1,303 @@
+esphome:
+  name: "marstek-rs485-bridge"
+  friendly_name: Marstek RS485 Bridge
+  min_version: 2026.9.0
+  name_add_mac_suffix: false
+
+esp32:
+  board: esp32dev
+  cpu_frequency: 240MHz
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: !secret marstek_bridge_api_key
+
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Useful for a network bridge: minimize Wi-Fi sleep latency.
+  power_save_mode: none
+
+  # Prefer a DHCP reservation for this device so the Modbus client has a stable target.
+
+web_server:
+  port: 80
+  version: 3
+  include_internal: false
+  local: true
+  ota: false
+  auth:
+    type: digest
+    username: !secret marstek_bridge_web_user
+    password: !secret marstek_bridge_web_password
+
+debug:
+  update_interval: 10s
+
+# TCP -> Modbus RTU gateway.
+# A Modbus TCP client connects to TCP port 502 using normal Modbus TCP.
+external_components:
+  - source:
+      type: git
+      url: https://github.com/rosenrot00/esphome_modbus_bridge
+      ref: 51cd779e2db07f08fa2acb6299114362775f2b57
+    components: [modbus_bridge]
+
+# LilyGO T-CAN485 board control pins.
+# Preserve these exactly from the working configuration.
+#
+# The board's MAX13487E handles RS485 direction automatically, so do NOT
+# configure de_pin/re_pin in modbus_bridge.
+output:
+  - platform: gpio
+    id: ENABLE_PIN
+    pin:
+      number: GPIO19
+      inverted: true
+
+  - platform: gpio
+    id: SE_PIN
+    pin:
+      number: GPIO17
+      inverted: true
+
+  - platform: gpio
+    id: ENABLE_5V_PIN
+    pin:
+      number: GPIO16
+      inverted: true
+
+# Marstek Venus E RS485: 115200 8N1.
+uart:
+  - id: mod_bus
+    rx_pin: GPIO21
+    tx_pin: GPIO22
+    baud_rate: 115200
+    data_bits: 8
+    stop_bits: 1
+    parity: NONE
+    rx_buffer_size: 512
+
+# IMPORTANT:
+# There is intentionally NO ESPHome "modbus:" or "modbus_controller:" here.
+# The TCP client is the Modbus master; this ESP32 only translates Modbus TCP <-> RTU.
+modbus_bridge:
+  id: mb_bridge
+  uart_id: mod_bus
+  tcp_port: 502
+
+  # Current upstream default is 1000 ms. Explicit here for clarity.
+  rtu_response_timeout: 1000
+
+  # Two connections are enough for Home Assistant plus a temporary diagnostic client.
+  tcp_allowed_clients: 2
+  tcp_client_timeout: 60000
+  tcp_poll_interval: 50
+
+  # Optional hardening once you know the client host/subnet:
+  #
+  # trusted_networks:
+  #   - 192.0.2.0/24
+  # protect_writes_for_untrusted_clients: true
+  # reject_untrusted_clients: true
+
+  on_tcp_clients_changed:
+    then:
+      - lambda: |-
+          id(tcp_clients) = count;
+      - sensor.template.publish:
+          id: mb_tcp_clients
+          state: !lambda |-
+            return (float) count;
+
+globals:
+  - id: tcp_clients
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+switch:
+  # Component-level debug logging.
+  - platform: template
+    name: "Modbus Bridge Debug"
+    id: modbus_debug_switch
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: diagnostic
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(mb_bridge).set_debug(true);
+    turn_off_action:
+      - lambda: |-
+          id(mb_bridge).set_debug(false);
+
+  # Handy for maintenance without reflashing.
+  - platform: template
+    name: "Modbus Bridge Enabled"
+    id: mb_bridge_enabled
+    restore_mode: ALWAYS_ON
+    entity_category: config
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(mb_bridge).set_enabled(true);
+    turn_off_action:
+      - lambda: |-
+          id(mb_bridge).set_enabled(false);
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"
+      entity_category: diagnostic
+
+  - platform: wifi_info
+    ip_address:
+      name: "ESP IP"
+      icon: mdi:ip
+      entity_category: diagnostic
+    ssid:
+      name: "ESP SSID"
+      icon: mdi:wifi
+      entity_category: diagnostic
+
+  - platform: version
+    name: "ESP Version"
+    hide_timestamp: true
+    icon: mdi:new-box
+    entity_category: diagnostic
+
+sensor:
+  - platform: wifi_signal
+    name: "ESP WiFi Signal Strength"
+    id: wifi_strength
+    update_interval: 30s
+    entity_category: diagnostic
+
+  - platform: copy
+    source_id: wifi_strength
+    name: "ESP WiFi Signal"
+    id: wifi_signal_proc
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: diagnostic
+    device_class: ""
+    icon: mdi:wifi
+
+  - platform: template
+    name: "Modbus TCP Clients"
+    id: mb_tcp_clients
+    accuracy_decimals: 0
+    update_interval: never
+    entity_category: diagnostic
+
+  - platform: template
+    name: "Modbus RTU Timeouts"
+    accuracy_decimals: 0
+    update_interval: 10s
+    entity_category: diagnostic
+    lambda: |-
+      return (float) id(mb_bridge).get_timeouts();
+
+  - platform: template
+    name: "Modbus RTU CRC Drops"
+    accuracy_decimals: 0
+    update_interval: 10s
+    entity_category: diagnostic
+    lambda: |-
+      return (float) id(mb_bridge).get_drops_rtu_crc();
+
+  - platform: template
+    name: "Modbus RTU Mismatch Drops"
+    accuracy_decimals: 0
+    update_interval: 10s
+    entity_category: diagnostic
+    lambda: |-
+      return (float) id(mb_bridge).get_drops_rtu_mismatch();
+
+  - platform: template
+    name: "Modbus RTU Incomplete Drops"
+    accuracy_decimals: 0
+    update_interval: 10s
+    entity_category: diagnostic
+    lambda: |-
+      return (float) id(mb_bridge).get_drops_rtu_incomplete();
+
+  - platform: template
+    name: "Modbus TCP No-Slot Events"
+    accuracy_decimals: 0
+    update_interval: 10s
+    entity_category: diagnostic
+    lambda: |-
+      return (float) id(mb_bridge).get_noslot_events();
+
+###############################################################################
+# LED
+###############################################################################
+light:
+  - platform: esp32_rmt_led_strip
+    channel_colors: GRB
+    chipset: WS2812
+    pin: GPIO4
+    num_leds: 1
+    name: "Status LED"
+    id: status_led
+
+# LED status:
+#   red    = Wi-Fi disconnected
+#   amber  = Wi-Fi OK, but no Modbus TCP client connected
+#   blue   = TCP client connected, but weak Wi-Fi (< -80 dBm)
+#   green  = TCP client connected and Wi-Fi signal OK
+interval:
+  - interval: 5s
+    then:
+      - if:
+          condition:
+            not:
+              wifi.connected:
+          then:
+            - light.turn_on:
+                id: status_led
+                red: 100%
+                green: 0%
+                blue: 0%
+          else:
+            - if:
+                condition:
+                  lambda: |-
+                    return id(tcp_clients) <= 0;
+                then:
+                  - light.turn_on:
+                      id: status_led
+                      red: 100%
+                      green: 35%
+                      blue: 0%
+                else:
+                  - if:
+                      condition:
+                        lambda: |-
+                          return id(wifi_strength).has_state() &&
+                                 id(wifi_strength).state < -80;
+                      then:
+                        - light.turn_on:
+                            id: status_led
+                            red: 0%
+                            green: 0%
+                            blue: 100%
+                      else:
+                        - light.turn_on:
+                            id: status_led
+                            red: 0%
+                            green: 100%
+                            blue: 0%

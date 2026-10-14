@@ -1,0 +1,6 @@
+{
+  "darkrain-nl/sofar-modbus": "8ba88c64fd53fb2474b6ac63f1537732951f1a3e",
+  "home-assistant-libs/modbus-connection": "d2f683745f942908056debfb46fa2b04a620eb5e",
+  "fonske/MarstekVenusV3-modbus-TCP-IP": "2626b7ff4c05a22572f029c58404fc653e73e691",
+  "sphings79/Marstek-Venus-D-Firmware-Reverse-Engineering": "3a2d55e62763eff0eba8fad34e0b967b00b2c435"
+}

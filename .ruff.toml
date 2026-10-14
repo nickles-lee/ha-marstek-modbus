@@ -1,0 +1,15 @@
+# Keep the integration aligned with core conventions; vendor files follow the library.
+target-version = "py314"
+extend-include = ["scripts/check", "scripts/setup"]
+extend-exclude = [".test-core"]
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "D"]
+ignore = ["D107", "D401"]
+[lint.pydocstyle]
+convention = "pep257"
+[lint.isort]
+known-third-party = ["modbus_connection"]
+known-first-party = ["homeassistant", "marstek_modbus", "tests"]
+[lint.per-file-ignores]
+"tests/*" = ["D100", "D103", "D104"]
+"custom_components/marstek/_vendor/marstek_modbus/tuning.py" = ["D102"]

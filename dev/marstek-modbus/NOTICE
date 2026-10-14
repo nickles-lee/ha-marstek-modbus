@@ -1,0 +1,5 @@
+Marstek Modbus
+Copyright 2026 nickles-lee and contributors.
+
+Timing utilities, component patterns and CI/release scaffolding adapted from
+darkrain-nl/sofar-modbus, Copyright its contributors, Apache License 2.0.

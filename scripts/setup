@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""Set up a reproducible local test environment and pinned Core checkout."""
+
+import argparse
+import json
+import subprocess
+import sys
+import venv
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+BASELINES = json.loads((ROOT / "core-baselines.json").read_text())
+
+
+def main() -> None:
+    """Create the selected environment, fetch Core, and build translations."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("baseline", nargs="?", choices=BASELINES, default="stable")
+    args = parser.parse_args()
+    if sys.version_info < (3, 14, 2) or sys.version_info >= (3, 15):
+        raise SystemExit(
+            "Run this script with Python 3.14.2 or newer (but below 3.15)."
+        )
+    baseline = BASELINES[args.baseline]
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts/fetch_core.py"), args.baseline],
+        check=True,
+    )
+    env = ROOT / ".venv" / args.baseline
+    if not (env / "bin/python").exists():
+        venv.create(env, with_pip=True)
+    python = str(env / "bin/python")
+    subprocess.run(
+        [
+            python,
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            str(ROOT / ".test-core" / args.baseline / "requirements_test.txt"),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            python,
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            str(ROOT / "requirements_common.txt"),
+            "-r",
+            str(ROOT / "requirements_dev.txt"),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            python,
+            "-m",
+            "pip",
+            "install",
+            "homeassistant @ https://codeload.github.com/home-assistant/core/tar.gz/"
+            + baseline["commit"],
+            "modbus-connection[tmodbus]==" + baseline["modbus_connection"],
+            "-e",
+            str(ROOT / "dev/marstek-modbus"),
+        ],
+        check=True,
+    )
+    esphome_env = ROOT / ".venv/esphome"
+    if not (esphome_env / "bin/python").exists():
+        venv.create(esphome_env, with_pip=True)
+    subprocess.run(
+        [
+            str(esphome_env / "bin/python"),
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            str(ROOT / "requirements_esphome.txt"),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [python, "-m", "script.translations", "develop", "--all"],
+        cwd=ROOT / ".test-core" / args.baseline,
+        check=True,
+    )
+    print(f"Ready: ./scripts/check {args.baseline}")
+
+
+if __name__ == "__main__":
+    main()

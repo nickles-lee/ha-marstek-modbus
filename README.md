@@ -8,11 +8,19 @@ Local Modbus TCP integration for Marstek Venus A, Venus D, Venus E 2.0 and Venus
 
 ## Installation
 
-1. Add https://github.com/nickles-lee/ha-marstek-modbus as a custom HACS repository, category Integration.
+With HACS installed, open the Marstek repository using this button:
+
+[![Open Marstek in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nickles-lee&repository=ha-marstek-modbus&category=integration)
+
+1. Open the repository using the button above, or add https://github.com/nickles-lee/ha-marstek-modbus manually as a custom HACS repository, category Integration.
 2. Install Marstek and restart Home Assistant.
 3. Add Marstek under Settings → Devices & services.
 4. Enter the battery or gateway TCP host, port (normally 502), unit ID (normally 1), model and actual pack count. Select `e_v2` and one pack for Venus E 2.0.
 5. Accept the next free HBC battery number or choose another unused N.
+
+After installing Marstek and restarting Home Assistant, this button opens the integration setup:
+
+[![Add Marstek to Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=marstek)
 
 For local testing, copy custom_components/marstek into your configuration's custom_components directory and restart. The generated ZIP contains custom_components/marstek and can be extracted into the configuration directory.
 
